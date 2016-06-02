@@ -19,10 +19,6 @@ object Main {
     val log = Logging.getLogger(system, this)
     val config = ConfigFactory.load()
 
-//    def logTime(report: Aggregates, text: String, predicate: Long => Boolean) ={
-//      log.info(s"${text} ${report.overOneMilli count predicate}")
-//    }
-
     val master = system.actorOf(Props[Master])
     system.scheduler.scheduleOnce(config.getInt("testDuration") seconds) {
       implicit val timeout = Timeout(10 seconds)
