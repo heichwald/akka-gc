@@ -67,18 +67,23 @@ class Master extends Actor {
   def init: Receive = {
     case StartWorking =>
       val workers = (1 to initialNumWorkers).foldLeft(Map.empty[ActorRef, Int]) { (m, num) =>
+        // Create initial workers with random lives bounded by lives in the config
         m + (context.actorOf(Props[Worker]) -> r.nextInt(lives))
       }
+      // Ask worker to perform some work and to keep some state
       workers foreach { case (ref, lives) => ref ! BuildRandomHistory }
+      // Continue  working non stop
       context.become(creatingWork(workers))
   }
 
+  // Keep workers working
   def creatingWork(
       workers: Map[ActorRef, Int],
       report: Aggregates = Aggregates()
     ): Receive = {
 
     case WorkDone(execTime) => {
+      // Kill exhausted worker and create a fresh one; ask worker to perform work
       val remainingLives = workers(sender)
       val newWorkers = if (remainingLives == 0) {
         sender ! PoisonPill
